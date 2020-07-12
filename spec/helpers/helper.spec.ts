@@ -1,4 +1,11 @@
-import { DataEntry, Helpers } from '../../src/helpers';
+import {
+  DataEntry,
+  Dataset,
+  Helpers,
+  MSEEmptyDatasetError,
+  MSEUnknownDatasetColumn,
+  MSEUnmatchedDatasetLengthsError,
+} from '../../src/helpers';
 
 describe('Deepfreeze', () => {
   let object: { [key: string]: number | string | boolean | object };
@@ -43,7 +50,7 @@ describe('Deepfreeze', () => {
 });
 
 describe('shiftDataset', () => {
-  let dataset: DataEntry[];
+  let dataset: Dataset;
   const columns: string[] = ['length', 'width'];
   const fun = (
     previous: number,
@@ -88,7 +95,7 @@ describe('shiftDataset', () => {
   });
 
   it('should shift dataset as expected', () => {
-    const expectedDataset: DataEntry[] = [
+    const expectedDataset: Dataset = [
       {
         id: 1,
         length: 27.75,
@@ -160,5 +167,108 @@ describe('shiftDataset', () => {
         Helpers['_computeShifts'](dataset, columns, fun, initialValue)
       ).toEqual(expectedShifts);
     });
+  });
+});
+
+describe('meanSquaredError', () => {
+  const dataset: Dataset = [
+    {
+      id: 1,
+      status: 1,
+    },
+    {
+      id: 2,
+      status: 0,
+    },
+    {
+      id: 3,
+      status: 0,
+    },
+    {
+      id: 4,
+      status: 1,
+    },
+  ];
+
+  it('should compute MSE as expected', () => {
+    const predictedDataset: Dataset = [
+      {
+        id: 1,
+        status: 0,
+      },
+      {
+        id: 2,
+        status: 0,
+      },
+      {
+        id: 3,
+        status: 0,
+      },
+      {
+        id: 4,
+        status: 0,
+      },
+    ];
+    expect(
+      Helpers.meanSquaredError(dataset, predictedDataset, 'status')
+    ).toEqual(0.5);
+  });
+
+  it('should throw MSEEmptyDatasetError', () => {
+    const dataset: Dataset = [];
+    const predictedDataset: Dataset = dataset;
+    expect(() =>
+      Helpers.meanSquaredError(dataset, predictedDataset, 'status')
+    ).toThrow(new MSEEmptyDatasetError("Can't run MSE on an empty dataset"));
+  });
+
+  it('should throw MSEUnknownDatasetColumn', () => {
+    const predictedDataset: Dataset = [
+      {
+        id: 1,
+        status: 0,
+      },
+      {
+        id: 2,
+        status: 0,
+      },
+      {
+        id: 3,
+        status: 0,
+      },
+      {
+        id: 4,
+        status: 0,
+      },
+    ];
+    expect(() =>
+      Helpers.meanSquaredError(dataset, predictedDataset, 'statuses')
+    ).toThrow(
+      new MSEUnknownDatasetColumn("Could not find column 'statuses' in dataset")
+    );
+  });
+
+  it('should throw MSEUnmatchedDatasetLengthsError', () => {
+    const predictedDataset: Dataset = [
+      {
+        id: 1,
+        status: 0,
+      },
+      {
+        id: 2,
+        status: 0,
+      },
+      {
+        id: 3,
+        status: 0,
+      },
+    ];
+    expect(() =>
+      Helpers.meanSquaredError(dataset, predictedDataset, 'status')
+    ).toThrow(
+      new MSEUnmatchedDatasetLengthsError(
+        'Original dataset and predicted dataset have different sizes: 4, 3'
+      )
+    );
   });
 });

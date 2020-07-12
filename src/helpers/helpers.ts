@@ -1,4 +1,26 @@
 export type DataEntry = { [key: string]: string | number | boolean };
+export type Dataset = DataEntry[];
+
+export class MSEUnmatchedDatasetLengthsError extends Error {
+  public constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, MSEUnmatchedDatasetLengthsError.prototype);
+  }
+}
+
+export class MSEEmptyDatasetError extends Error {
+  public constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, MSEEmptyDatasetError.prototype);
+  }
+}
+
+export class MSEUnknownDatasetColumn extends Error {
+  public constructor(message: string) {
+    super(message);
+    Object.setPrototypeOf(this, MSEUnknownDatasetColumn.prototype);
+  }
+}
 
 export class Helpers {
   /**
@@ -26,7 +48,7 @@ export class Helpers {
    * Compute shifts of numeric columns of a given dataset, using a provided
    * function and initial value.
    *
-   * @param {DataEntry[]} data - Dataset to shift
+   * @param {Dataset} data - Dataset to shift
    * @param {string[]} columns - Columns to be shifted
    * @param {(previous: number, current: number) => number} fun - Function to
    * use to compute the shift
@@ -35,7 +57,7 @@ export class Helpers {
    * column
    */
   private static _computeShifts(
-    data: DataEntry[],
+    data: Dataset,
     columns: string[],
     fun: (
       previous: number,
@@ -76,8 +98,17 @@ export class Helpers {
     return entry;
   }
 
+  /**
+   * Shift dataset
+   *
+   * @param {Dataset} data - Dataset to shift
+   * @param {string[]} columns - Columns to shift
+   * @param {function} fun - Function to use to shift data
+   * @param {number} initialValue - Initial shift value
+   * @returns {Dataset} Shifted dataset
+   */
   public static shiftDataset(
-    data: DataEntry[],
+    data: Dataset,
     columns: string[],
     fun: (
       previous: number,
@@ -86,7 +117,7 @@ export class Helpers {
       array: number[]
     ) => number,
     initialValue: number
-  ): DataEntry[] {
+  ): Dataset {
     // Computes data shift for numerical columns using the provided function
     const shifts: { [key: string]: number } = Helpers._computeShifts(
       data,
@@ -99,5 +130,50 @@ export class Helpers {
     return data.map((entry: DataEntry) => {
       return Helpers._shiftEntry(entry, shifts);
     });
+  }
+
+  /**
+   * Compute Mean Squared Error (MSE)
+   *
+   * @param {Dataset} dataset - Source dataset
+   * @param {Dataset} predicted - Dataset with predicted values
+   * @param {string} column - Column to compute MSE on
+   * @returns {number} MSE
+   */
+  public static meanSquaredError(
+    dataset: Dataset,
+    predicted: Dataset,
+    column: string
+  ): number {
+    if (dataset.length === 0) {
+      throw new MSEEmptyDatasetError("Can't run MSE on an empty dataset");
+    }
+
+    const fun: (entry: DataEntry) => number = (entry: DataEntry) => {
+      if (column in entry) {
+        return entry[column] as number;
+      } else {
+        throw new MSEUnknownDatasetColumn(
+          `Could not find column '${column}' in dataset`
+        );
+      }
+    };
+    const datasetValues: number[] = dataset.map(fun);
+    const predictedValues: number[] = predicted.map(fun);
+
+    if (datasetValues.length !== predictedValues.length) {
+      throw new MSEUnmatchedDatasetLengthsError(
+        `Original dataset and predicted dataset have different sizes: ${datasetValues.length}, ${predictedValues.length}`
+      );
+    }
+
+    return (
+      (1 / datasetValues.length) *
+      datasetValues.reduce(
+        (previous: number, current: number, index: number) =>
+          previous + Math.pow(current - predictedValues[index], 2),
+        0
+      )
+    );
   }
 }
