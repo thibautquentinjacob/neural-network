@@ -11,7 +11,7 @@ export class MemoizedNeuronInvalidArgumentError extends Error {
 }
 
 export class Neuron {
-  private _output: { [key: string]: number };
+  private _memoized: { [key: string]: number };
   public readonly weights: Vector;
   public readonly bias: number;
   public readonly memoize: boolean;
@@ -28,7 +28,7 @@ export class Neuron {
     this.weights = this._processWeights(weights);
     this.bias = this._processBias(bias);
     this.memoize = this._processMemoize(memoize);
-    this._output = {};
+    this._memoized = {};
 
     Object.seal(this);
   }
@@ -68,14 +68,14 @@ export class Neuron {
     }
     const hash: string = this._hashInput(input);
     // If the result has not already been computed
-    if (!this._output[hash]) {
+    if (!this._memoized[hash]) {
       const result: number = activationFunction(
         this.weights.dot(input.values) + this.bias
       );
       if (this.memoize) {
-        this._output[hash] = result;
+        this._memoized[hash] = result;
       }
     }
-    return this._output[hash];
+    return this._memoized[hash];
   }
 }

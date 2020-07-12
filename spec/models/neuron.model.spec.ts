@@ -74,7 +74,7 @@ describe('Neuron', () => {
     });
 
     it('output field should be as expected', () => {
-      expect(neuron['_output']).toEqual({});
+      expect(neuron['_memoized']).toEqual({});
     });
   });
 
@@ -129,7 +129,7 @@ describe('Neuron', () => {
         .createSpy('activationFunction')
         .and.returnValue(outputValue);
       neuron.feedForward(input, activationFunction);
-      expect(neuron['_output']['2-3']).toEqual(outputValue);
+      expect(neuron['_memoized']['2-3']).toEqual(outputValue);
       neuron.feedForward(input, activationFunction);
 
       expect(activationFunction).toHaveBeenCalledTimes(1);
@@ -147,7 +147,7 @@ describe('Neuron', () => {
         .createSpy('activationFunction')
         .and.returnValue(outputValue);
       neuron.feedForward(input, activationFunction);
-      expect(neuron['_output']).toEqual({});
+      expect(neuron['_memoized']).toEqual({});
       neuron.feedForward(input, activationFunction);
 
       expect(activationFunction).toHaveBeenCalledTimes(2);
