@@ -6,9 +6,10 @@
   "scripts": {
     "start": "node dist/index.js",
     "build": "tsc --project tsconfig.json",
-    "coverage": "nyc -a -r lcov -x \"coverage/**/*.js\" -x \"spec/**/*.ts\" npm test",
+    "coverage": "nyc -a -r lcov -x \"dist\" -x \"coverage/**/*.js\" -x \"spec/**/*.ts\" npm test",
     "test": "jasmine-ts --config=jasmine.json",
-    "lint": "eslint . --ext .ts"
+    "check-lint": "eslint . --ext .ts",
+    "check-coverage": "nyc -a --check-coverage -x \"dist\" -x \"coverage/**/*.js\" -x \"spec/**/*.ts\" npm test"
   },
   "author": "Thibaut Jacob",
   "license": "MIT",
@@ -28,7 +29,7 @@
   },
   "husky": {
     "hooks": {
-      "pre-push": "npm run test && npm run lint"
+      "pre-push": "npm run check-lint && npm run check-coverage"
     }
   }
 }
