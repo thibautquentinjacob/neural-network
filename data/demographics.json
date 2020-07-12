@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Alice",
+    "weight": 133,
+    "height": 65,
+    "gender": "F"
+  },
+  {
+    "name": "Bob",
+    "weight": 160,
+    "height": 72,
+    "gender": "M"
+  },
+  {
+    "name": "Charlie",
+    "weight": 152,
+    "height": 70,
+    "gender": "M"
+  },
+  {
+    "name": "Diana",
+    "weight": 120,
+    "height": 60,
+    "gender": "F"
+  }
+]
